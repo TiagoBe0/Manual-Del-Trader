@@ -1,0 +1,459 @@
+import React, { useState } from 'react';
+import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+
+const DerivativesIndicatorsDashboard = () => {
+  const [selectedIndicator, setSelectedIndicator] = useState('funding');
+
+  // Datos de ejemplo - Funding Rate histórico
+  const fundingRateData = [
+    { time: '00:00', rate: 0.01, signal: 'neutral' },
+    { time: '04:00', rate: 0.025, signal: 'bullish' },
+    { time: '08:00', rate: 0.05, signal: 'very_bullish' },
+    { time: '12:00', rate: 0.08, signal: 'extreme_bullish' },
+    { time: '16:00', rate: 0.06, signal: 'very_bullish' },
+    { time: '20:00', rate: 0.03, signal: 'bullish' },
+    { time: '23:59', rate: 0.015, signal: 'neutral' }
+  ];
+
+  // Open Interest histórico
+  const openInterestData = [
+    { date: 'Sep 25', oi: 180, volume: 45 },
+    { date: 'Sep 26', oi: 190, volume: 52 },
+    { date: 'Sep 27', oi: 205, volume: 61 },
+    { date: 'Sep 28', oi: 215, volume: 58 },
+    { date: 'Sep 29', oi: 220, volume: 72 },
+    { date: 'Sep 30', oi: 225, volume: 68 },
+    { date: 'Oct 01', oi: 230, volume: 75 }
+  ];
+
+  // Long/Short Ratio
+  const longShortData = [
+    { exchange: 'Binance', long: 55, short: 45, ratio: 1.22 },
+    { exchange: 'OKX', long: 58, short: 42, ratio: 1.38 },
+    { exchange: 'Bybit', long: 52, short: 48, ratio: 1.08 },
+    { exchange: 'Bitget', long: 60, short: 40, ratio: 1.50 },
+    { exchange: 'Deribit', long: 54, short: 46, ratio: 1.17 }
+  ];
+
+  // Liquidation Heatmap (niveles de precio con liquidaciones)
+  const liquidationLevels = [
+    { price: 125000, longLiq: 2.5, shortLiq: 0.2, total: 2.7 },
+    { price: 120000, longLiq: 5.8, shortLiq: 0.5, total: 6.3 },
+    { price: 115000, longLiq: 12.5, shortLiq: 1.2, total: 13.7 },
+    { price: 110000, longLiq: 8.3, shortLiq: 2.8, total: 11.1 },
+    { price: 105000, longLiq: 3.2, shortLiq: 6.5, total: 9.7 },
+    { price: 100000, longLiq: 1.5, shortLiq: 11.2, total: 12.7 },
+    { price: 95000, longLiq: 0.8, shortLiq: 15.8, total: 16.6 }
+  ];
+
+  const indicators = {
+    funding: {
+      title: '💰 Funding Rate',
+      subtitle: 'Costo de mantener posiciones long vs short',
+      color: 'from-blue-500 to-blue-600'
+    },
+    openInterest: {
+      title: '📊 Open Interest',
+      subtitle: 'Total de contratos abiertos en el mercado',
+      color: 'from-purple-500 to-purple-600'
+    },
+    longShort: {
+      title: '⚖️ Long/Short Ratio',
+      subtitle: 'Proporción de traders en long vs short',
+      color: 'from-green-500 to-green-600'
+    },
+    liquidations: {
+      title: '💥 Liquidation Levels',
+      subtitle: 'Concentración de posibles liquidaciones',
+      color: 'from-red-500 to-red-600'
+    }
+  };
+
+  const currentIndicator = indicators[selectedIndicator];
+
+  // Stats actuales
+  const currentStats = {
+    fundingRate: 0.015,
+    openInterest: 230,
+    longShortRatio: 1.27,
+    liquidations24h: 245,
+    fearGreed: 52
+  };
+
+  const getFundingSignal = (rate) => {
+    if (rate > 0.05) return { text: '🔴 EXTREMO ALCISTA', desc: 'Longs pagan mucho, posible corrección', color: 'bg-red-500' };
+    if (rate > 0.02) return { text: '🟠 MUY ALCISTA', desc: 'Presión alcista fuerte', color: 'bg-orange-500' };
+    if (rate > 0) return { text: '🟢 ALCISTA', desc: 'Longs pagan a shorts (normal)', color: 'bg-green-500' };
+    if (rate > -0.02) return { text: '🟡 BAJISTA', desc: 'Shorts pagan a longs', color: 'bg-yellow-500' };
+    return { text: '🔵 MUY BAJISTA', desc: 'Presión bajista fuerte', color: 'bg-blue-500' };
+  };
+
+  const fundingSignal = getFundingSignal(currentStats.fundingRate);
+
+  return (
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">
+            🎯 Indicadores de Derivados & Futuros
+          </h1>
+          <p className="text-purple-300 text-lg">
+            Análisis avanzado del mercado de futuros de crypto
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 shadow-2xl">
+            <div className="text-blue-100 text-xs mb-1">Funding Rate</div>
+            <div className="text-white text-2xl font-bold">{(currentStats.fundingRate * 100).toFixed(3)}%</div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 shadow-2xl">
+            <div className="text-purple-100 text-xs mb-1">Open Interest</div>
+            <div className="text-white text-2xl font-bold">${currentStats.openInterest}B</div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 shadow-2xl">
+            <div className="text-green-100 text-xs mb-1">Long/Short</div>
+            <div className="text-white text-2xl font-bold">{currentStats.longShortRatio}</div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-4 shadow-2xl">
+            <div className="text-red-100 text-xs mb-1">Liq. 24h</div>
+            <div className="text-white text-2xl font-bold">${currentStats.liquidations24h}M</div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-4 shadow-2xl">
+            <div className="text-yellow-100 text-xs mb-1">Fear & Greed</div>
+            <div className="text-white text-2xl font-bold">{currentStats.fearGreed}</div>
+          </div>
+        </div>
+
+        {/* Selector de Indicadores */}
+        <div className="flex gap-4 mb-8 flex-wrap justify-center">
+          {Object.keys(indicators).map((key) => (
+            <button
+              key={key}
+              onClick={() => setSelectedIndicator(key)}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                selectedIndicator === key
+                  ? `bg-gradient-to-r ${indicators[key].color} text-white shadow-lg scale-105`
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              {indicators[key].title}
+            </button>
+          ))}
+        </div>
+
+        {/* FUNDING RATE */}
+        {selectedIndicator === 'funding' && (
+          <div className="space-y-8">
+            <div className={`${fundingSignal.color} rounded-xl p-6 shadow-2xl`}>
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                  <div className="text-white text-2xl font-bold mb-2">{fundingSignal.text}</div>
+                  <div className="text-white/90 text-sm">{fundingSignal.desc}</div>
+                </div>
+                <div className="bg-white/20 rounded-lg p-4 text-white text-center">
+                  <div className="text-sm mb-1">Rate Actual</div>
+                  <div className="text-3xl font-bold">{(currentStats.fundingRate * 100).toFixed(3)}%</div>
+                  <div className="text-xs mt-1">cada 8 horas</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 rounded-xl p-6 shadow-2xl backdrop-blur">
+              <h3 className="text-white text-xl font-bold mb-4">📈 Funding Rate en Tiempo Real</h3>
+              <ResponsiveContainer width="100%" height={350}>
+                <AreaChart data={fundingRateData}>
+                  <defs>
+                    <linearGradient id="fundingGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis dataKey="time" stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" tickFormatter={(val) => `${(val * 100).toFixed(2)}%`} />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #475569',
+                      borderRadius: '8px',
+                      color: '#fff'
+                    }}
+                    formatter={(val) => [`${(val * 100).toFixed(3)}%`, 'Funding Rate']}
+                  />
+                  <ReferenceLine y={0} stroke="#64748b" strokeDasharray="3 3" />
+                  <ReferenceLine y={0.05} stroke="#ef4444" strokeDasharray="2 2" label="Alto" />
+                  <Area 
+                    type="monotone" 
+                    dataKey="rate" 
+                    stroke="#3b82f6" 
+                    fill="url(#fundingGradient)"
+                    strokeWidth={3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/30">
+                  <h4 className="text-green-400 font-bold mb-2">🟢 Funding Positivo</h4>
+                  <p className="text-slate-300 text-sm">
+                    <strong>Longs pagan a Shorts</strong><br/>
+                    Mercado alcista, mayoría en long.<br/>
+                    Si &gt;0.05% = ¡Alerta! Sobreapalancamiento.
+                  </p>
+                </div>
+
+                <div className="bg-gray-900/30 rounded-lg p-4 border border-gray-500/30">
+                  <h4 className="text-gray-400 font-bold mb-2">⚪ Funding Neutral</h4>
+                  <p className="text-slate-300 text-sm">
+                    <strong>≈ 0.01%</strong><br/>
+                    Balance entre longs y shorts.<br/>
+                    Mercado saludable y equilibrado.
+                  </p>
+                </div>
+
+                <div className="bg-red-900/30 rounded-lg p-4 border border-red-500/30">
+                  <h4 className="text-red-400 font-bold mb-2">🔴 Funding Negativo</h4>
+                  <p className="text-slate-300 text-sm">
+                    <strong>Shorts pagan a Longs</strong><br/>
+                    Mercado bajista, mayoría en short.<br/>
+                    Oportunidad potencial de rebote.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* OPEN INTEREST */}
+        {selectedIndicator === 'openInterest' && (
+          <div className="space-y-8">
+            <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 shadow-2xl">
+              <h3 className="text-white text-2xl font-bold mb-2">
+                Open Interest Récord: $230B 🚀
+              </h3>
+              <p className="text-white/90">
+                El OI mide el total de contratos abiertos. OI alto = mucho interés y liquidez,
+                pero también mayor riesgo de liquidaciones en cascada.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/50 rounded-xl p-6 shadow-2xl backdrop-blur">
+              <h3 className="text-white text-xl font-bold mb-4">📊 Open Interest & Volumen</h3>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={openInterestData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis dataKey="date" stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #475569',
+                      borderRadius: '8px',
+                      color: '#fff'
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="oi" fill="#8b5cf6" name="Open Interest ($B)" />
+                  <Bar dataKey="volume" fill="#3b82f6" name="Volume 24h ($B)" />
+                </BarChart>
+              </ResponsiveContainer>
+
+              <div className="mt-6 space-y-3">
+                <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/30">
+                  <h4 className="text-purple-400 font-bold mb-2">📈 OI Subiendo + Precio Subiendo</h4>
+                  <p className="text-slate-300 text-sm">
+                    <strong>ALCISTA FUERTE</strong> - Nuevas posiciones long entrando. Tendencia confirmada.
+                  </p>
+                </div>
+
+                <div className="bg-red-900/30 rounded-lg p-4 border border-red-500/30">
+                  <h4 className="text-red-400 font-bold mb-2">📉 OI Subiendo + Precio Bajando</h4>
+                  <p className="text-slate-300 text-sm">
+                    <strong>BAJISTA FUERTE</strong> - Nuevas posiciones short entrando. Vender presión.
+                  </p>
+                </div>
+
+                <div className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-500/30">
+                  <h4 className="text-yellow-400 font-bold mb-2">⚠️ OI Bajando</h4>
+                  <p className="text-slate-300 text-sm">
+                    <strong>CIERRE DE POSICIONES</strong> - Traders saliendo del mercado. Posible reversión o consolidación.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LONG/SHORT RATIO */}
+        {selectedIndicator === 'longShort' && (
+          <div className="space-y-8">
+            <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 shadow-2xl">
+              <h3 className="text-white text-2xl font-bold mb-2">
+                Ratio Agregado: {currentStats.longShortRatio} (Longs dominan)
+              </h3>
+              <p className="text-white/90">
+                Ratio &gt; 1 = Más traders en long. Ratio &lt; 1 = Más en short.
+                Extremos (&gt;2 o &lt;0.5) pueden indicar reversión.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/50 rounded-xl p-6 shadow-2xl backdrop-blur">
+              <h3 className="text-white text-xl font-bold mb-4">⚖️ Long/Short por Exchange</h3>
+              
+              <div className="space-y-4 mb-6">
+                {longShortData.map((ex, idx) => (
+                  <div key={idx} className="bg-slate-700/50 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-white font-bold text-lg">{ex.exchange}</span>
+                      <span className={`text-lg font-bold ${ex.ratio > 1 ? 'text-green-400' : 'text-red-400'}`}>
+                        {ex.ratio.toFixed(2)}
+                      </span>
+                    </div>
+                    
+                    <div className="relative w-full h-8 bg-slate-600 rounded-full overflow-hidden">
+                      <div 
+                        className="absolute left-0 top-0 h-full bg-green-500 flex items-center justify-center text-white text-sm font-bold"
+                        style={{ width: `${ex.long}%` }}
+                      >
+                        {ex.long > 30 && `${ex.long}% Long`}
+                      </div>
+                      <div 
+                        className="absolute right-0 top-0 h-full bg-red-500 flex items-center justify-center text-white text-sm font-bold"
+                        style={{ width: `${ex.short}%` }}
+                      >
+                        {ex.short > 30 && `${ex.short}% Short`}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/30">
+                  <h4 className="text-green-400 font-bold mb-2">📊 Ratio Alto (&gt;1.5)</h4>
+                  <p className="text-slate-300 text-sm">
+                    Demasiados longs = Riesgo de Long Squeeze (caída forzada).
+                    Señal contrarian: posible tomar profits.
+                  </p>
+                </div>
+
+                <div className="bg-red-900/30 rounded-lg p-4 border border-red-500/30">
+                  <h4 className="text-red-400 font-bold mb-2">📊 Ratio Bajo (&lt;0.7)</h4>
+                  <p className="text-slate-300 text-sm">
+                    Demasiados shorts = Riesgo de Short Squeeze (subida forzada).
+                    Señal contrarian: posible oportunidad de compra.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LIQUIDATION LEVELS */}
+        {selectedIndicator === 'liquidations' && (
+          <div className="space-y-8">
+            <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 shadow-2xl">
+              <h3 className="text-white text-2xl font-bold mb-2">
+                💥 Zonas de Alta Liquidación
+              </h3>
+              <p className="text-white/90">
+                Los niveles con muchas liquidaciones actúan como "imanes de precio".
+                El precio tiende a moverse hacia estas zonas para liquidar posiciones apalancadas.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/50 rounded-xl p-6 shadow-2xl backdrop-blur">
+              <h3 className="text-white text-xl font-bold mb-4">🔥 Heatmap de Liquidaciones</h3>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={liquidationLevels} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis type="number" stroke="#94a3b8" />
+                  <YAxis type="category" dataKey="price" stroke="#94a3b8" tickFormatter={(val) => `$${(val/1000).toFixed(0)}K`} />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #475569',
+                      borderRadius: '8px',
+                      color: '#fff'
+                    }}
+                    formatter={(val) => [`$${val.toFixed(1)}B`, '']}
+                  />
+                  <Legend />
+                  <Bar dataKey="longLiq" stackId="a" fill="#10b981" name="Long Liquidations" />
+                  <Bar dataKey="shortLiq" stackId="a" fill="#ef4444" name="Short Liquidations" />
+                </BarChart>
+              </ResponsiveContainer>
+
+              <div className="mt-6 space-y-3">
+                <div className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-500/30">
+                  <h4 className="text-yellow-400 font-bold mb-2">🎯 Cómo Usar el Heatmap</h4>
+                  <p className="text-slate-300 text-sm mb-2">
+                    <strong>1. Identificar clusters grandes</strong> - Zonas con más de $10B son "magnéticas"
+                  </p>
+                  <p className="text-slate-300 text-sm mb-2">
+                    <strong>2. Dirección del precio</strong> - Tiende a moverse hacia clusters cercanos
+                  </p>
+                  <p className="text-slate-300 text-sm">
+                    <strong>3. Stop Loss placement</strong> - Evita poner stops justo en zonas de alta liquidación
+                  </p>
+                </div>
+
+                <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30">
+                  <h4 className="text-blue-400 font-bold mb-2">💡 Estrategia Avanzada</h4>
+                  <p className="text-slate-300 text-sm">
+                    <strong>Long Squeeze:</strong> Precio baja rápido hacia cluster de longs ($105K-$110K) para liquidarlos, 
+                    luego rebota fuerte (oportunidad de compra).<br/><br/>
+                    <strong>Short Squeeze:</strong> Precio sube hacia cluster de shorts ($120K-$125K), 
+                    shorts se liquidan forzando más subida (continuación alcista).
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Info General */}
+        <div className="mt-8 bg-slate-800/30 rounded-xl p-6 backdrop-blur">
+          <h3 className="text-white font-bold text-xl mb-3">🎓 Combinando Indicadores</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300 text-sm">
+            <div>
+              <p className="mb-2">
+                <span className="text-purple-400">•</span> <strong>Funding Alto + OI Alto:</strong> Mercado sobrecalentado, riesgo de corrección
+              </p>
+              <p className="mb-2">
+                <span className="text-purple-400">•</span> <strong>Long/Short &gt; 2 + Funding &gt; 0.05%:</strong> Long squeeze inminente
+              </p>
+              <p className="mb-2">
+                <span className="text-purple-400">•</span> <strong>OI bajando + Precio lateral:</strong> Consolidación, esperar breakout
+              </p>
+            </div>
+            <div>
+              <p className="mb-2">
+                <span className="text-blue-400">•</span> <strong>Liquidaciones cerca + Funding extremo:</strong> Cascada de liq. posible
+              </p>
+              <p className="mb-2">
+                <span className="text-blue-400">•</span> <strong>OI récord + Precio ATH:</strong> Euforia, tomar ganancias parciales
+              </p>
+              <p className="mb-2">
+                <span className="text-blue-400">•</span> <strong>Funding negativo + Precio bajando:</strong> Capitulación, oportunidad
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 text-center text-slate-400 text-sm">
+          Datos de ejemplo | Usa CoinGlass, Coinalyze para datos reales en vivo
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DerivativesIndicatorsDashboard;

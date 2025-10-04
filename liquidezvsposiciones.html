@@ -1,0 +1,357 @@
+import React, { useState } from 'react';
+import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const CryptoLiquidityDashboard = () => {
+  // Distribución actual del mercado (Octubre 2025)
+  const marketDistribution = [
+    { name: 'Bitcoin (BTC)', value: 58.33, color: '#F7931A' },
+    { name: 'Ethereum (ETH)', value: 12.5, color: '#627EEA' },
+    { name: 'Stablecoins (Liquidez)', value: 7.24, color: '#26A17B' },
+    { name: 'Otras Cryptos', value: 21.93, color: '#8B5CF6' }
+  ];
+
+  // Evolución del SSR (Stablecoin Supply Ratio) - datos aproximados
+  const ssrHistory = [
+    { month: 'Ene 24', ssr: 15, signal: 'Neutral' },
+    { month: 'Feb 24', ssr: 12, signal: 'Neutral' },
+    { month: 'Mar 24', ssr: 10, signal: 'Precaución' },
+    { month: 'Abr 24', ssr: 9, signal: 'Compra débil' },
+    { month: 'May 24', ssr: 11, signal: 'Neutral' },
+    { month: 'Jun 24', ssr: 13, signal: 'Neutral' },
+    { month: 'Jul 24', ssr: 10, signal: 'Neutral' },
+    { month: 'Ago 24', ssr: 8.5, signal: 'Compra' },
+    { month: 'Sep 24', ssr: 9, signal: 'Compra débil' },
+    { month: 'Oct 25', ssr: 7.9, signal: 'Compra fuerte' }
+  ];
+
+  // Capitalización de stablecoins vs BTC
+  const comparisonData = [
+    {
+      category: 'Bitcoin',
+      marketCap: 2425,
+      percentage: 58.33,
+      type: 'Posiciones'
+    },
+    {
+      category: 'Stablecoins',
+      marketCap: 308,
+      percentage: 7.24,
+      type: 'Liquidez'
+    }
+  ];
+
+  // Top stablecoins (datos actuales 2025)
+  const topStablecoins = [
+    { name: 'USDT', cap: 143, share: 46.4 },
+    { name: 'USDC', cap: 60, share: 19.5 },
+    { name: 'PYUSD', cap: 13, share: 4.2 },
+    { name: 'DAI', cap: 10, share: 3.2 },
+    { name: 'Otros', cap: 82, share: 26.7 }
+  ];
+
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const COLORS = ['#F7931A', '#627EEA', '#26A17B', '#8B5CF6'];
+  const STABLE_COLORS = ['#26A17B', '#2563EB', '#8B5CF6', '#F59E0B', '#64748B'];
+
+  const renderSSRIndicator = (ssr) => {
+    if (ssr < 8) return { text: '🟢 COMPRA FUERTE', color: 'bg-green-500', desc: 'Alta liquidez disponible' };
+    if (ssr < 10) return { text: '🟡 COMPRA DÉBIL', color: 'bg-yellow-500', desc: 'Liquidez moderada' };
+    if (ssr < 12) return { text: '🟠 NEUTRAL', color: 'bg-orange-500', desc: 'Equilibrio' };
+    return { text: '🔴 PRECAUCIÓN', color: 'bg-red-500', desc: 'Baja liquidez' };
+  };
+
+  const currentSSR = 7.9;
+  const ssrIndicator = renderSSRIndicator(currentSSR);
+
+  return (
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">
+            💰 Liquidez vs Posiciones en Crypto
+          </h1>
+          <p className="text-blue-300 text-lg">
+            Análisis del mercado - Octubre 2025
+          </p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex justify-center gap-4 mb-8 flex-wrap">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              activeTab === 'overview'
+                ? 'bg-blue-500 text-white shadow-lg'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            Vista General
+          </button>
+          <button
+            onClick={() => setActiveTab('ssr')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              activeTab === 'ssr'
+                ? 'bg-blue-500 text-white shadow-lg'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            SSR Indicator
+          </button>
+          <button
+            onClick={() => setActiveTab('stablecoins')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              activeTab === 'stablecoins'
+                ? 'bg-blue-500 text-white shadow-lg'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            Stablecoins
+          </button>
+        </div>
+
+        {/* SSR Alert Box */}
+        <div className={`${ssrIndicator.color} rounded-xl p-6 mb-8 shadow-2xl`}>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">
+              <div className="text-white text-2xl font-bold mb-2">
+                {ssrIndicator.text}
+              </div>
+              <div className="text-white/90 text-sm">
+                SSR Actual: {currentSSR} | {ssrIndicator.desc}
+              </div>
+            </div>
+            <div className="bg-white/20 rounded-lg p-4 text-white text-center">
+              <div className="text-sm mb-1">Poder de Compra</div>
+              <div className="text-3xl font-bold">
+                {(100 / currentSSR).toFixed(1)}%
+              </div>
+              <div className="text-xs mt-1">del supply de BTC</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 shadow-2xl">
+            <div className="text-orange-100 text-sm mb-2">🔵 En Posiciones (BTC)</div>
+            <div className="text-white text-3xl font-bold mb-1">58.33%</div>
+            <div className="text-white/80 text-sm">$2.43T en Bitcoin</div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-2xl">
+            <div className="text-green-100 text-sm mb-2">💵 En Liquidez (Stables)</div>
+            <div className="text-white text-3xl font-bold mb-1">7.24%</div>
+            <div className="text-white/80 text-sm">$308B en stablecoins</div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 shadow-2xl">
+            <div className="text-purple-100 text-sm mb-2">📊 SSR Ratio</div>
+            <div className="text-white text-3xl font-bold mb-1">{currentSSR}</div>
+            <div className="text-white/80 text-sm">BTC Market Cap / Stables</div>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Pie Chart */}
+            <div className="bg-slate-800/50 rounded-xl p-6 shadow-2xl backdrop-blur">
+              <h3 className="text-white text-xl font-bold mb-4 text-center">
+                Distribución del Mercado Crypto
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={marketDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}%`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {marketDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #475569',
+                      borderRadius: '8px',
+                      color: '#fff'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Bar Comparison */}
+            <div className="bg-slate-800/50 rounded-xl p-6 shadow-2xl backdrop-blur">
+              <h3 className="text-white text-xl font-bold mb-4 text-center">
+                BTC vs Stablecoins (Market Cap)
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={comparisonData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis dataKey="category" stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #475569',
+                      borderRadius: '8px',
+                      color: '#fff'
+                    }}
+                  />
+                  <Bar dataKey="marketCap" fill="#3b82f6" name="Cap. (B USD)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'ssr' && (
+          <div className="bg-slate-800/50 rounded-xl p-6 shadow-2xl backdrop-blur">
+            <h3 className="text-white text-2xl font-bold mb-6 text-center">
+              Stablecoin Supply Ratio (SSR) - Tendencia Histórica
+            </h3>
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={ssrHistory}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <XAxis dataKey="month" stroke="#94a3b8" />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: '#1e293b',
+                    border: '1px solid #475569',
+                    borderRadius: '8px',
+                    color: '#fff'
+                  }}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="ssr" 
+                  stroke="#10b981" 
+                  strokeWidth={3}
+                  dot={{ fill: '#10b981', r: 6 }}
+                  name="SSR"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-slate-700/50 rounded-lg p-4">
+                <h4 className="text-green-400 font-bold mb-2">📉 SSR Bajo (&lt;8)</h4>
+                <p className="text-slate-300 text-sm">
+                  Alta liquidez en stablecoins. Mayor poder de compra disponible. 
+                  Señal de posible rally alcista.
+                </p>
+              </div>
+              <div className="bg-slate-700/50 rounded-lg p-4">
+                <h4 className="text-red-400 font-bold mb-2">📈 SSR Alto (&gt;12)</h4>
+                <p className="text-slate-300 text-sm">
+                  Baja liquidez en stablecoins. Menor poder de compra. 
+                  Posible corrección o consolidación.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'stablecoins' && (
+          <div className="space-y-6">
+            <div className="bg-slate-800/50 rounded-xl p-6 shadow-2xl backdrop-blur">
+              <h3 className="text-white text-2xl font-bold mb-6 text-center">
+                Top Stablecoins por Market Cap
+              </h3>
+              <div className="space-y-4">
+                {topStablecoins.map((stable, index) => (
+                  <div key={index} className="bg-slate-700/50 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: STABLE_COLORS[index] }}
+                        />
+                        <span className="text-white font-bold text-lg">{stable.name}</span>
+                      </div>
+                      <span className="text-blue-400 font-bold">
+                        ${stable.cap}B
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-600 rounded-full h-2">
+                      <div 
+                        className="h-2 rounded-full"
+                        style={{ 
+                          width: `${stable.share}%`,
+                          backgroundColor: STABLE_COLORS[index]
+                        }}
+                      />
+                    </div>
+                    <div className="text-slate-400 text-sm mt-1">
+                      {stable.share}% del mercado de stablecoins
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 rounded-xl p-6 shadow-2xl backdrop-blur">
+              <h3 className="text-white text-xl font-bold mb-4">
+                💡 Interpretación de Stablecoins
+              </h3>
+              <div className="space-y-3 text-slate-300">
+                <p>
+                  <strong className="text-green-400">⬆ Aumento en stablecoins:</strong> 
+                  {' '}Más dinero esperando en la banda. Potencial poder de compra creciente.
+                </p>
+                <p>
+                  <strong className="text-red-400">⬇ Disminución en stablecoins:</strong> 
+                  {' '}Dinero saliendo a posiciones o fuera del mercado crypto.
+                </p>
+                <p>
+                  <strong className="text-blue-400">📊 Fórmula SSR:</strong> 
+                  {' '}Market Cap BTC ÷ Market Cap Stablecoins = {currentSSR}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Info Footer */}
+        <div className="mt-8 bg-slate-800/30 rounded-xl p-6 backdrop-blur">
+          <h3 className="text-white font-bold text-xl mb-3">🔍 Dónde ver estos datos en vivo:</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-300">
+            <div>
+              <p className="mb-2">
+                <span className="text-blue-400">•</span> <strong>USDT Dominance:</strong> TradingView
+              </p>
+              <p className="mb-2">
+                <span className="text-blue-400">•</span> <strong>SSR Ratio:</strong> CryptoQuant, Glassnode
+              </p>
+            </div>
+            <div>
+              <p className="mb-2">
+                <span className="text-blue-400">•</span> <strong>Stablecoins Data:</strong> DefiLlama
+              </p>
+              <p className="mb-2">
+                <span className="text-blue-400">•</span> <strong>Market Overview:</strong> CoinGecko, CoinMarketCap
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 text-center text-slate-400 text-sm">
+          Datos actualizados: Octubre 2025 | Market Cap Total: $4.25T
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CryptoLiquidityDashboard;
